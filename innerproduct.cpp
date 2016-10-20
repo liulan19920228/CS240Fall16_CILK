@@ -8,7 +8,7 @@
 #include <cmath>
 #include <iterator>
 #include <functional>
-
+//#include <stdio.h>
 #include "example_util_gettime.h"
 
 #define COARSENESS 100
@@ -17,16 +17,16 @@
 
 double rec_cilkified(double *a, double *b, int n)
 {
-    double sum1=0,sum2=0;
+    double sum1,sum2;
     if(n <= COARSENESS)
-        return std::inner_product(a,a+n,b,0);
+        return std::inner_product(a,a+n,b,double(0));
     else{
-        sum1=cilk_spawn rec_cilkified(a,b,n/2);
-        sum2=rec_cilkified(a+n/2,b+n/2,n-n/2);
+        sum1=cilk_spawn rec_cilkified(a,b,int(n/2));
+        sum2=rec_cilkified(a+int(n/2),b+int(n/2),n-int(n/2));
         cilk_sync;
         return sum1+sum2;
    }
-    return 0;
+   // return 0;
 }
 
 double loop_cilkified(double *a, double *b, int n)
@@ -51,6 +51,7 @@ double loop_cilkified(double *a, double *b, int n)
             result+=a[n-i-1]*b[n-i-1];
         }
     }
+    delete [] sum;
     return result;
     return 0;
 }
@@ -71,7 +72,7 @@ double hyperobject_cilkified(double *a, double *b, int n)
 int close(double x, double y, int n)
 {
         double relative_diff = (x>y? (x-y)/x : (y-x)/x);
-        return (relative_diff < sqrt((double) n) * exp2(-42))? 1 : 0;
+       return (relative_diff < sqrt((double) n) * exp2(-42))? 1 : 0;
 }
 
 //A simple test harness
@@ -87,12 +88,17 @@ int inn_prod_driver(int n)
     std::random_shuffle(a, a + n);
     std::random_shuffle(b, b + n);
     
-    double seqresult = std::inner_product(a, a+n, b, 0);
-    
+    double seqresult = std::inner_product(a, a+n, b,(double)0);
+   // printf("seqresult is %f",seqresult);
+    //double c=0;
+   // for (int i=0; i<n; ++i)
+   // c+=a[i]*b[i];
+
+   // printf("true result is %f",c); 
     long t1 = example_get_time();
     for(int i=0; i< ITERS; ++i)
     {
-        seqresult = std::inner_product(a, a+n, b, 0);
+        seqresult = std::inner_product(a, a+n, b, double(0));
     }
     long t2 = example_get_time();
     
